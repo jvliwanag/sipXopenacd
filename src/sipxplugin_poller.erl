@@ -31,11 +31,11 @@
 -record(state, {timer, last_poll_time}).
 -define(SERVER, ?MODULE).
 
--include("log.hrl").
--include("cpx.hrl").
--include("queue.hrl").
--include("call.hrl").
--include("agent.hrl").
+-include_lib("OpenACD/include/log.hrl").
+-include_lib("OpenACD/include/cpx.hrl").
+-include_lib("OpenACD/include/queue.hrl").
+-include_lib("OpenACD/include/call.hrl").
+-include_lib("OpenACD/include/agent.hrl").
 
 start() ->
 	gen_server:start_link({local, ?SERVER}, ?SERVER, [], []).

@@ -26,7 +26,7 @@
 -define(DB, <<"imdb">>).
 -endif.
 
--include("cpx.hrl").
+-include_lib("OpenACD/include/cpx.hrl").
 -define(AGENT_CONFIG_TYPE, <<"openacdagentconfigcommand">>).
 
 -type conf() :: {Level :: pos_integer(), Dir :: string()}.

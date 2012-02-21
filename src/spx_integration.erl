@@ -24,11 +24,11 @@
 -define(DB, <<"imdb">>).
 -endif.
 
--include("log.hrl").
--include("call.hrl").
--include("queue.hrl").
--include("cpx.hrl").
--include("agent.hrl").
+-include_lib("OpenACD/include/log.hrl").
+-include_lib("OpenACD/include/call.hrl").
+-include_lib("OpenACD/include/queue.hrl").
+-include_lib("OpenACD/include/cpx.hrl").
+-include_lib("OpenACD/include/agent.hrl").
 
 %% API
 -export([

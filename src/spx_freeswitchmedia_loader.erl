@@ -26,7 +26,7 @@
 -define(DB, <<"imdb">>).
 -endif.
 
--include("cpx.hrl").
+-include_lib("OpenACD/include/cpx.hrl").
 -define(FREESWITCH_CONFIG_TYPE, <<"freeswitchmediacommand">>).
 
 -record(spx_fwconfig, {cnode, dialstring=""}).
