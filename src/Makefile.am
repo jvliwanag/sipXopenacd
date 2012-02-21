@@ -9,17 +9,17 @@ source_files = \
 	spx_integration.erl \
 	spx_util.erl
 
-compiled_files = $(source_files:.erl=.beam)
+compiled_files = ../ebin/$(source_files:.erl=.beam)
 
 EXTRA_DIST = $(source_files) sipxplugin.app.in
 
 PLUGIN_DIR = @OPENACD_DIR@/plugin.d
 
 sipxpluginbindir = $(PLUGIN_DIR)/sipxplugin/ebin
-sipxpluginbin_DATA = $(compiled_files) sipxplugin.app
+sipxpluginbin_DATA = $(compiled_files) ../ebin/sipxplugin.app
 CLEANFILES = $(compiled_files)
 
-sipxplugin.app : sipxplugin.app.in
+../ebin/sipxplugin.app : sipxplugin.app.in
 	sed \
 	  -e 's|@PACKAGE\@|@PACKAGE@|g' \
 	  -e 's|@VERSION\@|@VERSION@|g' \

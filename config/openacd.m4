@@ -40,6 +40,7 @@ openacd_prefix="yes")
     if test -z "$openacdinc_found" ; then
       AC_MSG_RESULT([no])
     fi
+    OPENACD_ERLCFLAGS="$OPENACD_ERLCFLAGS -o ../ebin"
     AC_SUBST([OPENACD_ERLCFLAGS])
   fi
 ])
