@@ -1,0 +1,60 @@
+{"entries": [
+
+{
+	"_id" : "agent1",
+	"name" : "foo",
+	"fnm" : "fooster",
+	"lnm" : "barter",
+	"skl" : [ "stop" ],
+	"clns" : [ "Demo Client" ],
+	"qs" : [ "default_queue" ],
+	"pin" : "foosecret",
+	"scrty" : "ADMIN",
+	"aggrp" : "foobaz",
+	"type" : "openacdagent"
+}
+
+, {
+	"_id" : "agent2",
+	"name" : "bar",
+	"fnm" : "barr",
+	"lnm" : "bazz",
+	"skl" : [],
+	"clns" : [ "Demo Client" ],
+	"qs" : [ "default_queue" ],
+	"pin" : "barsecret",
+	"scrty" : "AGENT",
+	"aggrp" : "Default",
+	"type" : "openacdagent"
+}
+
+, {
+	"_id" : "agent3",
+	"name" : "baz",
+	"fnm" : "barr",
+	"lnm" : "bazz",
+	"skl" : [],
+	"clns" : [ "Demo Client" ],
+	"qs" : [ "default_queue" ],
+	"pin" : "barsecret",
+	"scrty" : "SUPERVISOR",
+	"aggrp" : "foobaz",
+	"type" : "openacdagent"
+}
+
+, {
+	"_id" : "group1",
+	"name" : "Default",
+	"skl" : [ ],
+	"qs" : [ ],
+	"type" : "openacdagentgroup"
+}
+
+, {
+	"_id" : "group2",
+	"name" : "foobaz",
+	"skl" : [ ],
+	"qs" : [ ],
+	"type" : "openacdagentgroup"
+}
+]}
