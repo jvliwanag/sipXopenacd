@@ -57,4 +57,44 @@
 	"qs" : [ ],
 	"type" : "openacdagentgroup"
 }
+
+, {
+	"_id" : "queue1",
+	"name" : "boozer",
+	"prfl" : [ ],
+	"wht" : 0,
+	"skl" : [ ],
+	"rcps" : [ ],
+	"qgrp" : "queuez",
+	"type" : "openacdqueue"
+}
+
+, {
+	"_id" : "queue2",
+	"name" : "homer",
+	"prfl" : [ ],
+	"wht" : 2,
+	"skl" : [ ],
+	"rcps" : [ ],
+	"qgrp" : "queuezon",
+	"type" : "openacdqueue"
+}
+
+, {
+	"_id": "qgroup1",
+	"name": "Default",
+	"type": "openacdqueuegroup"
+}
+
+, {
+	"_id": "qgroup2",
+	"name": "queuezon",
+	"type": "openacdqueuegroup"
+}
+
+, {
+	"_id": "qgroup3",
+	"name": "boozer",
+	"type": "openacdqueuegroup"
+}
 ]}
