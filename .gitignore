@@ -11,3 +11,4 @@ bin/sipxopenacd
 deps/
 proto_src/
 ebin/
+dev/
