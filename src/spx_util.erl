@@ -16,6 +16,8 @@
 
 -include_lib("OpenACD/include/agent.hrl").
 -include_lib("OpenACD/include/queue.hrl").
+-include_lib("OpenACD/include/call.hrl").
+
 -include_lib("OpenACD/include/log.hrl").
 
 -ifdef(TEST).
@@ -35,7 +37,9 @@
 	build_profile/1,
 	build_release_opt/1,
 	build_queue/1,
-	build_queue_group/1
+	build_queue_group/1,
+	build_skill/1,
+	build_client/1
 ]).
 
 -ifdef(TEST).
@@ -408,11 +412,43 @@ read_recipe_action(<<"announce">>, P) ->
 			{error, invalid_vlu}
 	end.
 
+build_skill(P) ->
+	R = build_skill(P, #skill_rec{name=undefined, description=""}),
+	case {R#skill_rec.atom, R#skill_rec.name} of
+		{undefined, _} -> {error, noatom};
+		{_, undefined} -> {error, noname};
+		_ -> {ok, R}
+	end.
 
-% build_recipe_step([{<<"actn">>, Action}|T], Acc) ->
-% 	Acc#spx_recipe
+build_skill([], Acc) ->
+	Acc;
+build_skill([{<<"atom">>, Atm}|T], Acc) ->
+	build_skill(T, Acc#skill_rec{atom = binary_to_atom(Atm, utf8)});
+build_skill([{<<"name">>, Name}|T], Acc) ->
+	build_skill(T, Acc#skill_rec{name = binary_to_list(Name)});
+build_skill([{<<"dscr">>, Desc}|T], Acc) ->
+	build_skill(T, Acc#skill_rec{description = binary_to_list(Desc)});
+build_skill([{<<"grpnm">>, Group}|T], Acc) ->
+	build_skill(T, Acc#skill_rec{group = binary_to_list(Group)});
+build_skill([_|T], Acc) ->
+	build_skill(T, Acc).
 
-% build_recipe_step_action()
+build_client(P) ->
+	R = build_client(P, #client{label=undefined}),
+	case {R#client.id, R#client.label} of
+		{undefined, _} -> {error, noid};
+		{_, undefined} -> {error, nolabel};
+		_ -> {ok, R}
+	end.
+
+build_client([], Acc) ->
+	Acc;
+build_client([{<<"ident">>, Id}|T], Acc) ->
+	build_client(T, Acc#client{id = binary_to_list(Id)});
+build_client([{<<"name">>, Label}|T], Acc) ->
+	build_client(T, Acc#client{label = binary_to_list(Label)});
+build_client([_|T], Acc) ->
+	build_client(T, Acc).
 
 -ifdef(TEST).
 %%--------------------------------------------------------------------
@@ -645,6 +681,37 @@ build_recipe_test_() ->
 
 		%% TODO custom operations
 	].
+
+build_skill_test_() ->
+	Build = fun(P) -> spx_util:build_skill([{<<"atom">>, <<"skillz">>}, {<<"name">>, <<"fave">>}|P]) end,
+	[
+		?_assertEqual({error, noatom}, spx_util:build_skill([])),
+
+		?_assertMatch({ok, #skill_rec{atom=skillz}}, Build([])),
+
+		?_assertMatch({error, noname}, spx_util:build_skill([{<<"atom">>, <<"skillz">>}])),
+		?_assertMatch({ok, #skill_rec{name="fave"}}, Build([])),
+
+		?_assertMatch({ok, #skill_rec{description=""}}, Build([])),
+		?_assertMatch({ok, #skill_rec{description="favorite"}}, Build([{<<"dscr">>, <<"favorite">>}])),
+
+		?_assertMatch({ok, #skill_rec{group="Misc"}}, Build([])),
+		?_assertMatch({ok, #skill_rec{group="Magic"}}, Build([{<<"grpnm">>, <<"Magic">>}])),
+
+		?_assertMatch({ok, #skill_rec{}}, Build([{<<"unknown">>, <<"prop">>}]))
+	].
+
+build_client_test_() ->
+	Build = fun(P) -> spx_util:build_client([{<<"ident">>, <<"client1">>}, {<<"name">>, <<"MyClient">>}|P]) end,
+	[
+		?_assertEqual({error, noid}, spx_util:build_client([])),
+		
+		?_assertEqual({error, nolabel}, spx_util:build_client([{<<"ident">>, <<"client1">>}])),
+		?_assertMatch({ok, #client{label="MyClient"}}, Build([])),
+
+		?_assertMatch({ok, #client{}}, Build([{<<"unknown">>, <<"prop">>}]))	
+	].
+
 
 num_crv_cond_test_desc(Atm) ->
 	Bin = atom_to_binary(Atm, utf8),

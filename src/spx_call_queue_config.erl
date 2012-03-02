@@ -14,6 +14,7 @@
 -module(spx_call_queue_config).
 
 -include_lib("OpenACD/include/queue.hrl").
+-include_lib("OpenACD/include/call.hrl").
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
@@ -32,7 +33,13 @@
 	get_queues/0,
 
 	get_queue_group/1,
-	get_queue_groups/0
+	get_queue_groups/0,
+
+	get_skill/1,
+	get_skills/0,
+
+	get_client/2,
+	get_clients/0
 ]).
 
 %%====================================================================
@@ -45,6 +52,9 @@ start() ->
 
 	cpx_hooks:set_hook(spx_get_queue_group, get_queue_group, ?MODULE, get_queue_group, [], 200),
 	cpx_hooks:set_hook(spx_get_queue_groups, get_queue_groups, ?MODULE, get_queue_groups, [], 200),
+
+	cpx_hooks:set_hook(spx_get_skill, get_skill, ?MODULE, get_skill, [], 200),
+	cpx_hooks:set_hook(spx_get_skills, get_skills, ?MODULE, get_skills, [], 200),
 
 	ok.
 
@@ -72,26 +82,58 @@ get_queue_groups() ->
 	{ok, Props} = db_find(queuegroup, []),
 	{ok, [X || P <- Props, {ok, X} <- [spx_util:build_queue_group(P)]]}.
 
+get_skill(Atom) when is_atom(Atom) ->
+	case db_find_one(skill, [{<<"atom">>, atom_to_binary(Atom, utf8)}]) of
+		{ok, []} ->
+			noexists;
+		{ok, Props} ->
+			spx_util:build_skill(Props)
+	end.
 
-db_find(queue, Props) ->
-	db_find(<<"openacdqueue">>, Props);
-db_find(queuegroup, Props) ->
-	db_find(<<"openacdqueuegroup">>, Props);
+get_skills() ->
+	{ok, Props} = db_find(skill, []),
+	{ok, [X || P <- Props, {ok, X} <- [spx_util:build_skill(P)]]}.
+
+get_client(Key, Val) when is_atom(Key)->
+	Cond = case Key of
+		id -> {<<"ident">>, Val};
+		label -> {<<"name">>, Val}
+	end,
+
+	case db_find_one(client, [Cond]) of
+		{ok, []} ->
+			noexists;
+		{ok, Props} ->
+			spx_util:build_client(Props)
+	end.
+
+
+get_clients() ->
+	{ok, Props} = db_find(client, []),
+	{ok, [X || P <- Props, {ok, X} <- [spx_util:build_client(P)]]}.
+
+
+db_find(Type, Props) when is_atom(Type) ->
+	db_find(as_type(Type), Props);
 db_find(Type, Props) when is_binary(Type) ->
 	db_find([{<<"type">>, Type}|Props]).
-
 db_find(Props) when is_list(Props) ->
 	DB = mongoapi:new(spx, ?DB),
 	DB:find(<<"entity">>, Props,
 		undefined, 0, 0).
-db_find_one(queue, Props) ->
-	db_find_one(<<"openacdqueue">>, Props);
+
+db_find_one(Type, Props) when is_atom(Type) ->
+	db_find_one(as_type(Type), Props);
 db_find_one(Type, Props) when is_binary(Type) ->
 	db_find_one([{<<"type">>, Type}|Props]).
 db_find_one(Props) when is_list(Props) ->
 	DB = mongoapi:new(spx, ?DB),
 	DB:findOne(<<"entity">>, Props).
 
+as_type(queue) -> <<"openacdqueue">>;
+as_type(queuegroup) -> <<"openacdqueuegroup">>;
+as_type(skill) -> <<"openacdskill">>;
+as_type(client) -> <<"openacdclient">>.
 
 -ifdef(TEST).
 %%--------------------------------------------------------------------
@@ -107,7 +149,9 @@ start_test_() ->
 		?_assert(has_hook(spx_get_queue, get_queue)),
 		?_assert(has_hook(spx_get_queues, get_queues)),
 		?_assert(has_hook(spx_get_queue_group, get_queue_group)),
-		?_assert(has_hook(spx_get_queue_groups, get_queue_groups))
+		?_assert(has_hook(spx_get_queue_groups, get_queue_groups)),
+		?_assert(has_hook(spx_get_skill, get_skill)),
+		?_assert(has_hook(spx_get_skills, get_skills))
 	]}.
 
 integ_get_queue_test_() ->
@@ -126,6 +170,14 @@ integ_get_queues_test_() ->
 			spx_call_queue_config:get_queues())
 	]}.
 
+integ_get_queue_group_test_() ->
+	{setup, fun reset_test_db/0, fun stop_test_db/1, [
+		?_assertMatch({ok, #queue_group{name="queuezon"}},
+			spx_call_queue_config:get_queue_group("queuezon")),
+		?_assertMatch(noexists,
+			spx_call_queue_config:get_queue_group("nada"))
+	]}.
+
 integ_get_queue_groups_test_() ->
 	{setup, fun reset_test_db/0, fun stop_test_db/1, [
 		?_assertMatch({ok, [
@@ -134,6 +186,42 @@ integ_get_queue_groups_test_() ->
 			#queue_group{name="boozer"}
 			]},
 			spx_call_queue_config:get_queue_groups())
+	]}.
+
+integ_get_skills_test_() ->
+	{setup, fun reset_test_db/0, fun stop_test_db/1, [
+		?_assertMatch({ok, [
+			#skill_rec{atom='_agent', group="Magic"},
+			#skill_rec{atom='_brand', group="Magic"},
+			#skill_rec{atom=english, group="Language"}]},
+			spx_call_queue_config:get_skills())
+	]}.
+
+integ_get_skill_test_() ->
+	{setup, fun reset_test_db/0, fun stop_test_db/1, [
+		?_assertMatch({ok, #skill_rec{atom=english, group="Language"}},
+			spx_call_queue_config:get_skill(english))
+	]}.
+
+integ_get_clients_test_() ->
+	{setup, fun reset_test_db/0, fun stop_test_db/1, [
+		?_assertMatch({ok, [
+			#client{id="111", label="Ateneo"},
+			#client{id="222", label="UST"}]},
+			spx_call_queue_config:get_clients())
+	]}.
+
+integ_get_client_test_() ->
+	{setup, fun reset_test_db/0, fun stop_test_db/1, [
+		?_assertMatch({ok, #client{id="111", label="Ateneo"}},
+			spx_call_queue_config:get_client(id, "111")),
+		?_assertMatch(noexists,
+			spx_call_queue_config:get_client(id, "333")),
+		
+		?_assertMatch({ok, #client{id="222", label="UST"}},
+			spx_call_queue_config:get_client(label, "UST")),
+		?_assertMatch(noexists,
+			spx_call_queue_config:get_client(label, "LaSalle"))
 	]}.
 
 %% Test helpers

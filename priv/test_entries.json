@@ -97,4 +97,45 @@
 	"name": "boozer",
 	"type": "openacdqueuegroup"
 }
+
+, {
+	"_id" : "skill1",
+	"atom" : "_agent",
+	"dscr" : "Magic skill that is replaced by the agent name",
+	"grpnm" : "Magic",
+	"name" : "Agent Name",
+	"type" : "openacdskill"
+}
+
+, {
+	"_id" : "skill2",
+	"atom" : "_brand",
+	"dscr" : "Magic skill to expand to brand",
+	"grpnm" : "Magic",
+	"name" : "Brand",
+	"type" : "openacdskill"
+}
+
+, {
+	"_id" : "skill3",
+	"atom" : "english",
+	"dscr" : "English Language",
+	"grpnm" : "Language",
+	"name" : "English",
+	"type" : "openacdskill"
+}
+
+, {
+	"_id" : "client1",
+	"ident" : "111",
+	"name" : "Ateneo",
+	"type" : "openacdclient"
+}
+
+, {
+	"_id" : "client2",
+	"ident" : "222",
+	"name" : "UST",
+	"type" : "openacdclient"
+}
 ]}
