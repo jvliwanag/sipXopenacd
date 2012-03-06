@@ -360,7 +360,7 @@ try_do(Name, Action, Fun, Conf, NConf) ->
 % 	end.
 
 add_autoloads() ->
-	spx_integration:register_autoload(),
+	%spx_integration:register_autoload(),
 	spx_agentconfig_loader:start(),
 	spx_log_loader:start(),
 	spx_freeswitchmedia_loader:start(),

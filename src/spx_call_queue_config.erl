@@ -32,6 +32,8 @@
 	get_queue/1,
 	get_queues/0,
 
+	load_queues/0,
+
 	get_queue_group/1,
 	get_queue_groups/0,
 
@@ -56,6 +58,9 @@ start() ->
 	cpx_hooks:set_hook(spx_get_skill, get_skill, ?MODULE, get_skill, [], 200),
 	cpx_hooks:set_hook(spx_get_skills, get_skills, ?MODULE, get_skills, [], 200),
 
+	cpx_hooks:set_hook(spx_get_client, get_client, ?MODULE, get_client, [], 200),
+	cpx_hooks:set_hook(spx_get_clients, get_clients, ?MODULE, get_clients, [], 200),
+
 	ok.
 
 get_queue(Name) ->
@@ -69,6 +74,10 @@ get_queue(Name) ->
 get_queues() ->
 	{ok, Props} = db_find(queue, []),
 	{ok, [X || P <- Props, {ok, X} <- [spx_util:build_queue(P)]]}.
+
+load_queues() ->
+	{ok, Qs} = get_queues(),
+	lists:foreach(fun(Q) -> queue_manager:load_queue(Q#call_queue.name) end, Qs).
 
 get_queue_group(Name) ->
 	case db_find_one(queuegroup, [{<<"name">>, Name}]) of
@@ -151,7 +160,9 @@ start_test_() ->
 		?_assert(has_hook(spx_get_queue_group, get_queue_group)),
 		?_assert(has_hook(spx_get_queue_groups, get_queue_groups)),
 		?_assert(has_hook(spx_get_skill, get_skill)),
-		?_assert(has_hook(spx_get_skills, get_skills))
+		?_assert(has_hook(spx_get_skills, get_skills)),
+		?_assert(has_hook(spx_get_client, get_client)),
+		?_assert(has_hook(spx_get_clients, get_clients))
 	]}.
 
 integ_get_queue_test_() ->
@@ -169,6 +180,26 @@ integ_get_queues_test_() ->
 			#call_queue{name="homer", group="queuezon"}]},
 			spx_call_queue_config:get_queues())
 	]}.
+
+integ_load_queues_test_() ->
+	{setup, fun() ->
+		reset_test_db(),
+		meck:new(queue_manager)
+	end, fun (_) ->
+		stop_test_db(void),
+		meck:unload(queue_manager)
+	end,
+	[
+		fun() ->
+			meck:expect(queue_manager, load_queue, 1, ok),
+
+			spx_call_queue_config:load_queues(),
+
+			?assert(meck:called(queue_manager, load_queue, ["boozer"])),
+			?assert(meck:called(queue_manager, load_queue, ["homer"])),
+			?assert(meck:validate(queue_manager))
+		end
+	]}.	
 
 integ_get_queue_group_test_() ->
 	{setup, fun reset_test_db/0, fun stop_test_db/1, [

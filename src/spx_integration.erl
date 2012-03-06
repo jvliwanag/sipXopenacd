@@ -109,11 +109,11 @@ load_skills() ->
 	gen_server:call(integration, load_skills).
 
 load() ->
-	load_skills(),
-	load_profiles(),
-	load_agents(),
-	load_clients(),
-	load_queue_groups(),
+	%load_skills(),
+	%load_profiles(),
+	%load_agents(),
+	%load_clients(),
+	%load_queue_groups(),
 	load_queues().
 
 %%====================================================================
@@ -126,6 +126,11 @@ load() ->
 init(_Options) ->
 	mongodb:singleServer(spx),
 	ok = mongodb:connect(spx),
+
+	%% work-arounds since plug-in is not yet loaded
+	spx_agent_auth:start(),
+	spx_call_queue_config:start(),
+	spx_call_queue_config:load_queues(),	
 
 	{ok, #state{}}.
 
@@ -321,39 +326,16 @@ handle_call(load_queues, _From, State) ->
 	Type = <<"openacdqueue">>,
 	Now = util:now(),
 	
-	GetLoaded = fun() -> [Y || X <- mnesia:dirty_all_keys(call_queue), Y <- mnesia:dirty_read(call_queue, X)] end,
-	PropsToRec = fun(X) -> props_to_queue(X, #call_queue{name = "", skills = [], timestamp = Now}) end,
-	GetKey = fun(#call_queue{name=Name}) -> Name end,
-	Destroy = fun(#call_queue{name=Name}) ->
-		?INFO("About to destroy: ~p", [Name]),
-		call_queue_config:destroy_queue(Name),
-		case queue_manager:get_queue(Name) of
-			none -> ok;
-			Pid -> call_queue:stop(Pid)
-		end,
-		?INFO("Destroyed: ~p", [Name])
-	end,
-	Save = fun(Queue, none) ->
-			?INFO("Saving: ~p", [Queue]),
-			mnesia:dirty_write(Queue),
-			spawn_link(fun() -> queue_manager:load_queue(Queue#call_queue.name) end);
-		(Queue, OldQueue) -> 
-			case queue_equivalent(Queue, OldQueue) of
-				true ->
-					ok;
-				_ ->
-					?INFO("Updateing: ~p vs~n~p", [Queue, OldQueue]),
-					mnesia:dirty_write(Queue),
-					spawn_link(fun() ->
-						?INFO("Before: ~p", [mnesia:dirty_read(call_queue, Queue#call_queue.name)]),
-						queue_manager:load_queue(Queue#call_queue.name),
-						?INFO("After: ~p", [mnesia:dirty_read(call_queue, Queue#call_queue.name)])
-					end)
-			end
-		end,
-	IsProtected = fun(_) -> false end,
-	Reply = load_helper(Type, GetLoaded, PropsToRec, GetKey, Destroy, Save, IsProtected),
-	{reply, Reply, State};
+	%% TODO not build intermediary list
+	D = [{N, lists:sort(Skls), R, G} || {state, _, G, N, R, _, Skls, _, _} <- [call_queue:dump(P) || {_, P} <- queue_manager:queues()]],
+	%% TODO make atomic!
+	M = [{Q#call_queue.name, lists:sort(Q#call_queue.skills),
+		Q#call_queue.recipe, Q#call_queue.group} || Q <-
+			[call_queue_config:get_merged_queue(X#call_queue.name) || X <- call_queue_config:get_queues()]],
+
+	lists:foreach(fun({N, _, _, _} = E) -> case lists:member(E, D) of true -> ok; _ -> queue_manager:load_queue(N) end end, M),
+
+	{reply, ok, State};
 
 handle_call(load_skills, _From, State) ->
 	Type = <<"openacdskill">>,

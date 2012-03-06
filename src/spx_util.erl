@@ -217,6 +217,8 @@ build_queue([{<<"wht">>, Weight}|T], Acc) when is_integer(Weight) ->
 	build_queue(T, Acc#call_queue{weight=Weight});
 build_queue([{<<"qgrp">>, Group}|T], Acc) when is_binary(Group) ->
 	build_queue(T, Acc#call_queue{group=binary_to_list(Group)});
+build_queue([{<<"rcps">>, {array, Recipe}}|T], Acc) ->
+	build_queue(T, Acc#call_queue{recipe=build_recipe(Recipe)});
 build_queue([_|T], Acc) ->
 	build_queue(T, Acc).
 
@@ -234,7 +236,7 @@ build_queue_group([{<<"name">>, Name}|T], Acc) ->
 build_queue_group([{<<"skl">>, {array, Skills}}|T], Acc) ->
 	OldSkills = Acc#queue_group.skills,
 	build_queue_group(T, Acc#queue_group{skills=
-		OldSkills ++ [binary_to_existing_atom(X, utf8) || X <- Skills]});
+		OldSkills ++ [binary_to_atom(X, utf8) || X <- Skills]});
 build_queue_group([{<<"qs">>, {array, Queues}}|T], Acc) ->
 	OldSkills = Acc#queue_group.skills,
 	build_queue_group(T, Acc#queue_group{skills=
@@ -359,7 +361,7 @@ form_recipe_cond_str_crv(Atm, P) ->
 form_recipe_cond_atm_crv(Atm, P) ->
 	T = case proplists:get_value(<<"vlu">>, P) of
 		S when is_binary(S) ->
-			binary_to_existing_atom(S, utf8);
+			binary_to_atom(S, utf8);
 		_ ->
 			undefined
 	end,
@@ -564,6 +566,8 @@ build_queue_test_() ->
 
 		?_assertMatch({ok, #call_queue{group="Default"}}, Build([])), %% TODO not accept this?
 		?_assertMatch({ok, #call_queue{group="mygroup"}}, Build([{<<"qgrp">>, <<"mygroup">>}])),
+
+		%% TODO add recipe
 
 		%% unknown
 		?_assertMatch({ok, #call_queue{}}, Build([{<<"unknownprop">>, <<"someval">>}]))

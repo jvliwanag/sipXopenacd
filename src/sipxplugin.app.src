@@ -12,7 +12,9 @@
 	spx_integration,
 	spx_log_loader,
 	spx_util,
-    spx_agent_auth]},
+    spx_agent_auth,
+	spx_call_queue_config
+]},
 {registered, [
 	sipxplugin_sup,
 	spx_autoloader
