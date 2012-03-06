@@ -205,7 +205,7 @@ build_release_opt([_|T], Acc) ->
 %% Queue
 
 build_queue(P) ->
-	Q = build_queue(P, #call_queue{name=undefined}),
+	Q = build_queue(P, #call_queue{name=undefined, skills=[]}),
 	if Q#call_queue.name =:= undefined -> {error, noname};
 		true -> {ok, Q}
 	end.
@@ -213,6 +213,18 @@ build_queue([], Acc) ->
 	Acc;
 build_queue([{<<"name">>, Name}|T], Acc) ->
 	build_queue(T, Acc#call_queue{name=binary_to_list(Name)});
+build_queue([{<<"skl">>, {array, Skills}}|T], Acc) ->
+	OldSkills = Acc#call_queue.skills,
+	build_queue(T, Acc#call_queue{skills=
+		OldSkills ++ [binary_to_atom(X, utf8) || X <- Skills]});
+build_queue([{<<"qs">>, {array, Queues}}|T], Acc) ->
+	OldSkills = Acc#call_queue.skills,
+	build_queue(T, Acc#call_queue{skills=
+		OldSkills ++ [{'_queue', binary_to_list(X)} || X <- Queues]});
+build_queue([{<<"clns">>, {array, Clients}}|T], Acc) ->
+	OldSkills = Acc#call_queue.skills,
+	build_queue(T, Acc#call_queue{skills=
+		OldSkills ++ [{'_brand', binary_to_list(X)} || X <- Clients]});
 build_queue([{<<"wht">>, Weight}|T], Acc) when is_integer(Weight) ->
 	build_queue(T, Acc#call_queue{weight=Weight});
 build_queue([{<<"qgrp">>, Group}|T], Acc) when is_binary(Group) ->
@@ -224,7 +236,7 @@ build_queue([_|T], Acc) ->
 
 %% Queue Group
 build_queue_group(P) ->
-	G = build_queue_group(P, #queue_group{name=undefined}),
+	G = build_queue_group(P, #queue_group{name=undefined, skills=[]}),
 	if G#queue_group.name =:= undefined -> {error, noname};
 		true -> {ok, G}
 	end.
@@ -566,6 +578,18 @@ build_queue_test_() ->
 
 		?_assertMatch({ok, #call_queue{group="Default"}}, Build([])), %% TODO not accept this?
 		?_assertMatch({ok, #call_queue{group="mygroup"}}, Build([{<<"qgrp">>, <<"mygroup">>}])),
+
+		%% skills
+		?_assertMatch({ok, #call_queue{skills=[]}}, Build([])),
+		?_assertMatch({ok, #call_queue{
+			skills=['_agent', english,
+					{'_queue', "cyber"}, {'_queue', "mega"},
+					{'_brand', "dalek"}, {'_brand', "master"}]}},
+			Build([
+				{<<"skl">>, {array,[<<"_agent">>, <<"english">>]}},
+				{<<"qs">>, {array,[<<"cyber">>, <<"mega">>]}},
+				{<<"clns">>,{array,[<<"dalek">>, <<"master">>]}}
+			])),
 
 		%% TODO add recipe
 
