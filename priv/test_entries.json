@@ -8,7 +8,8 @@
 	"skl" : [ "stop" ],
 	"clns" : [ "Demo Client" ],
 	"qs" : [ "default_queue" ],
-	"pin" : "foosecret",
+	"pntk" : "4dadc3a8d96939640eef8aeedf28525d",
+	"rlm": "ezuce.com",
 	"scrty" : "ADMIN",
 	"aggrp" : "foobaz",
 	"type" : "openacdagent"
@@ -22,7 +23,8 @@
 	"skl" : [],
 	"clns" : [ "Demo Client" ],
 	"qs" : [ "default_queue" ],
-	"pin" : "barsecret",
+	"pntk" : "1fe34b985bac4f8aa7741591c01bd617",
+	"rlm": "ezuce.com",
 	"scrty" : "AGENT",
 	"aggrp" : "Default",
 	"type" : "openacdagent"
@@ -36,7 +38,8 @@
 	"skl" : [],
 	"clns" : [ "Demo Client" ],
 	"qs" : [ "default_queue" ],
-	"pin" : "barsecret",
+	"pntk" : "666260ef9123cae8c0bed032b8cb852e",
+	"rlm": "ezuce.com",
 	"scrty" : "SUPERVISOR",
 	"aggrp" : "foobaz",
 	"type" : "openacdagent"
