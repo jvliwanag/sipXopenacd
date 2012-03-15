@@ -167,8 +167,8 @@ integ_get_agents_by_profile_test_() ->
 
 integ_get_agent_test_() ->
 	{setup, fun reset_test_db/0, fun stop_test_db/1,
-		[?_assertMatch(none, spx_agent_auth:get_agent({login, "nada"})),
-		?_assertMatch(none, spx_agent_auth:get_agent({id, "noone"})),
+		[?_assertMatch(none, spx_agent_auth:get_agent(login, "nada")),
+		?_assertMatch(none, spx_agent_auth:get_agent(id, "noone")),
 
 		?_assertMatch({ok,
 			#agent_auth{id="agent1", login="foo", securitylevel=admin}}, 
